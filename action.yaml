@@ -6,7 +6,14 @@ inputs:
   bump_type:
     description: "Type of version increment (major, minor, patch)"
     required: true
-    default: "minor"
+  debug:
+    description: "Enable debugging (true/false)"
+    required: false
+    default: "false"
+  debug_init_tag:
+    description: "Debug with initial tag (e.g. v1.2.3)"
+    required: false
+    default: ""
 
 outputs:
   new_version:
@@ -18,6 +25,24 @@ runs:
   steps:
     - name: "Checkout code"
       uses: actions/checkout@v4
+
+    - name: Setup debugging
+      if: ${{ inputs.debug == 'true' }}
+      run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+
+          git init
+
+          echo "42" > test.txt
+
+          git add test.txt
+          git commit -m "Initial commit"
+
+          if [[ -n "${{ inputs.debug_init_tag }}" ]]; then
+            git tag "${{ inputs.debug_init_tag }}"
+          fi
+      shell: bash
 
     - name: "Get latest tag"
       run: |

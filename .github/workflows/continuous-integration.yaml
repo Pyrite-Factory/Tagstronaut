@@ -23,25 +23,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Initial Tag
-        run: |
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
-
-          git init
-
-          echo "42" > test.txt
-
-          git add test.txt
-          git commit -m "Initial commit"
-          
-          git tag ${{ matrix.test_case.initial_tag }}
-
-      - name: Run Tagstronaut Action
+      - name: Run Tagstronaut Action in debug mode
         id: version_bump
         uses: ./
         with:
           bump_type: ${{ matrix.test_case.bump_type }}
+          debug: true
+          debug_init_tag: ${{ matrix.test_case.initial_tag }}
       
       - name: Verify Output
         run: |
