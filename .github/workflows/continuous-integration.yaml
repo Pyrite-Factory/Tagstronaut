@@ -9,16 +9,26 @@ on:
   workflow_dispatch:
 
 jobs:
-  version_bump_tests:
-    name: Test Tagstronaut Action
+  validate-action:
+    name: Validate action
     runs-on: ubuntu-latest
     strategy:
       matrix:
         test_case:
-          - { bump_type: "major", initial_tag: "v3.9.27", expected_version: "v4.0.0" }
-          - { bump_type: "minor", initial_tag: "v3.9.27", expected_version: "v3.10.0" }
-          - { bump_type: "patch", initial_tag: "v3.9.27", expected_version: "v3.9.28" }
+          # zero version start
+          - { bump_type: "major", initial_tag: "v0.0.0", expected_version: "v1.0.0" }
+          - { bump_type: "minor", initial_tag: "v0.0.0", expected_version: "v0.1.0" }
+          - { bump_type: "patch", initial_tag: "v0.0.0", expected_version: "v0.0.1" }
 
+          # no tags present (simulating fresh repo without tags)
+          - { bump_type: "major", initial_tag: "", expected_version: "v1.0.0" }
+          - { bump_type: "minor", initial_tag: "", expected_version: "v0.1.0" }
+          - { bump_type: "patch", initial_tag: "", expected_version: "v0.0.1" }
+
+          # boundary bump from v9.9.9
+          - { bump_type: "major", initial_tag: "v9.9.9", expected_version: "v10.0.0" }
+          - { bump_type: "minor", initial_tag: "v9.9.9", expected_version: "v9.10.0" }
+          - { bump_type: "patch", initial_tag: "v9.9.9", expected_version: "v9.9.10" }
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
