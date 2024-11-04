@@ -1,0 +1,54 @@
+name: "Tagstronaut"
+author: "sindre0830"
+description: "Calculates the next version based on major, minor, or patch input."
+
+inputs:
+  bump_type:
+    description: "Type of version increment (major, minor, patch)"
+    required: true
+    default: "minor"
+
+outputs:
+  new_version:
+    description: "The calculated next version tag"
+    value: ${{ steps.calculate-new-version.outputs.new_version }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Checkout code"
+      uses: actions/checkout@v4
+
+    - name: "Get latest tag"
+      run: |
+        git fetch --tags
+
+        TAG=$(git describe --tags --abbrev=0 || echo "v0.0.0")
+        echo "Latest tag: $TAG"
+
+        echo "tag=$TAG" >> $GITHUB_ENV
+      shell: bash
+
+    - name: "Calculate new version"
+      id: calculate-new-version
+      run: |
+        TAG="${{ env.tag }}"
+        bump_type="${{ inputs.bump_type }}"
+        version=${TAG#v}
+
+        IFS='.' read -r major minor patch <<< "$version"
+
+        if [[ "$bump_type" == "major" ]]; then
+          major=$((major + 1)); minor=0; patch=0
+        elif [[ "$bump_type" == "minor" ]]; then
+          minor=$((minor + 1)); patch=0
+        elif [[ "$bump_type" == "patch" ]]; then
+          patch=$((patch + 1))
+        else
+          echo "Invalid bump type: $bump_type"
+          exit 1
+        fi
+
+        NEW_TAG="v$major.$minor.$patch"
+        echo "::set-output name=new_version::$NEW_TAG"
+      shell: bash
