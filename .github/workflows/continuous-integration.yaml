@@ -1,0 +1,50 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches: main
+    paths:
+      - '.github/workflows/continuous-integration.yaml'
+      - 'action.yaml'
+  workflow_dispatch:
+
+jobs:
+  version_bump_tests:
+    name: Test Tagstronaut Action
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test_case:
+          - { bump_type: "major", initial_tag: "v3.9.27", expected_version: "v4.0.0" }
+          - { bump_type: "minor", initial_tag: "v3.9.27", expected_version: "v3.10.0" }
+          - { bump_type: "patch", initial_tag: "v3.9.27", expected_version: "v3.9.28" }
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Initial Tag
+        run: |
+          git init
+          echo "42" > test.txt
+          git add test.txt
+          git commit -m "Initial commit"
+          git tag ${{ matrix.test_case.initial_tag }}
+
+      - name: Run Tagstronaut Action
+        id: version_bump
+        uses: ./
+        with:
+          bump_type: ${{ matrix.test_case.bump_type }}
+      
+      - name: Verify Output
+        run: |
+          expected_version="${{ matrix.test_case.expected_version }}"
+          actual_version="${{ steps.version_bump.outputs.new_version }}"
+          
+          if [[ "$actual_version" != "$expected_version" ]]; then
+            echo "❌ Test failed: Expected $expected_version but got $actual_version"
+            exit 1
+          else
+            echo "✅ Test passed: Version is $actual_version as expected."
+          fi
