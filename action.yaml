@@ -75,5 +75,5 @@ runs:
         fi
 
         NEW_TAG="v$major.$minor.$patch"
-        echo "::set-output name=new_version::$NEW_TAG"
+        echo "new_version=$NEW_TAG" >> $GITHUB_OUTPUT
       shell: bash
